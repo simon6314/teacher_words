@@ -356,6 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Toggle Workspace view
     welcomeView.style.display = 'none';
     editorPanel.style.display = 'flex';
+
+    // Scroll editor panel into view on mobile
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        editorPanel.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    }
   }
 
   function updateWordCounter() {

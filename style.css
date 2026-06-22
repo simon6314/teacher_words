@@ -649,7 +649,6 @@ textarea {
   resize: vertical;
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -664,7 +663,8 @@ textarea {
   transition: var(--transition);
   outline: none;
   user-select: none;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
 }
 
 .btn-full {
@@ -1028,11 +1028,25 @@ textarea {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    height: 400px;
+    height: 380px;
   }
   .workspace {
     height: auto;
     overflow: visible;
+  }
+  .editor-panel {
+    padding: 12px;
+    gap: 16px;
+  }
+  .student-card {
+    padding: 12px 16px;
+  }
+  .comment-output-section .flex-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .comment-output-section .btn {
+    width: 100%;
   }
 }
 
