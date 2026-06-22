@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="style.css?v=1.1.0">
+  <link rel="stylesheet" href="style.css?v=1.2.0">
 </head>
 <body>
   
@@ -44,6 +44,14 @@
     <!-- Sidebar: Student Roster and Semester -->
     <aside class="sidebar">
       <div class="sidebar-header">
+        <!-- Student Group (Sheet Tab) Selection -->
+        <div class="semester-section" style="margin-bottom: 12px;">
+          <label for="sheetSelect" class="section-label">選擇學生群 (分頁)</label>
+          <select id="sheetSelect" class="styled-select">
+            <option value="">載入分頁中...</option>
+          </select>
+        </div>
+        
         <!-- Semester Selection and Setup -->
         <div class="semester-section">
           <div class="flex-row justify-between align-center">
@@ -359,6 +367,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.1.0"></script>
+  <script src="app.js?v=1.2.0"></script>
 </body>
 </html>

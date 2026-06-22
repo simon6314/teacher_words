@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     semesters: [],
     students: [],
     completedSemesters: [],
+    sheetNames: [],
+    selectedSheet: '',
     
     selectedSemester: '',
     selectedStudentSeat: '',
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const openSettingsBtn = document.getElementById('openSettingsBtn');
   
   // Sidebar elements
+  const sheetSelect = document.getElementById('sheetSelect');
   const semesterSelect = document.getElementById('semesterSelect');
   const addSemesterBtn = document.getElementById('addSemesterBtn');
   const completeSemesterBtn = document.getElementById('completeSemesterBtn');
@@ -144,6 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateSyncIndicator('state-connecting', '與試算表同步中...');
     
+    // Auto-inject selected sheet name if we have one and it's not overridden
+    if (appState.selectedSheet && !params.sheetName) {
+      params.sheetName = appState.selectedSheet;
+    }
+    
     // Add timestamp cache buster
     params.cb = Date.now();
     const queryString = Object.entries(params)
@@ -173,10 +181,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!appState.gasUrl) return;
     
     try {
-      const result = await callGAS({ action: 'getData' });
+      // Pass the selectedSheet if set
+      const params = { action: 'getData' };
+      if (appState.selectedSheet) {
+        params.sheetName = appState.selectedSheet;
+      }
+      
+      const result = await callGAS(params);
       appState.semesters = result.semesters || [];
       appState.students = result.students || [];
       appState.completedSemesters = result.completedSemesters || [];
+      appState.sheetNames = result.sheetNames || [];
+      
+      // Update selectedSheet to match what the backend actually loaded
+      appState.selectedSheet = result.currentSheetName || '';
+      
+      // Render Sheet Select Dropdown
+      renderSheetDropdown();
       
       // Update Semester Dropdown
       const prevSelectedSem = appState.selectedSemester;
@@ -233,6 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (appState.selectedSemester && appState.semesters.includes(appState.selectedSemester)) {
       semesterSelect.value = appState.selectedSemester;
     }
+  }
+ 
+  // Helper to render the sheet dropdown option list
+  function renderSheetDropdown() {
+    if (appState.sheetNames.length === 0) {
+      sheetSelect.innerHTML = '<option value="">(無分頁)</option>';
+      return;
+    }
+    
+    sheetSelect.innerHTML = appState.sheetNames.map(name => {
+      const selected = name === appState.selectedSheet ? 'selected' : '';
+      return `<option value="${name}" ${selected}>${name}</option>`;
+    }).join('');
   }
 
   // Update completeSemesterBtn appearance depending on whether selected semester is completed
@@ -621,6 +655,15 @@ document.addEventListener('DOMContentLoaded', () => {
     studentSearchInput.focus();
   });
 
+  // Sheet Tab Selection Change
+  sheetSelect.addEventListener('change', () => {
+    appState.selectedSheet = sheetSelect.value;
+    appState.selectedStudentSeat = ''; // Reset selected student when changing group
+    welcomeView.style.display = 'flex';
+    editorPanel.style.display = 'none';
+    syncRoster(); // Reload full roster for the new sheet
+  });
+ 
   // Semester Selection Dropdown Change
   semesterSelect.addEventListener('change', () => {
     appState.selectedSemester = semesterSelect.value;
