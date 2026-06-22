@@ -663,6 +663,24 @@ document.addEventListener('DOMContentLoaded', () => {
     editorPanel.style.display = 'none';
     syncRoster(); // Reload full roster for the new sheet
   });
+
+  // Collapsible Settings Toggle
+  const settingsHeader = document.getElementById('sidebarSettingsHeader');
+  if (settingsHeader) {
+    const settingsPanel = settingsHeader.parentElement;
+    settingsHeader.addEventListener('click', () => {
+      const isCollapsed = settingsPanel.classList.toggle('collapsed');
+      settingsHeader.setAttribute('aria-expanded', !isCollapsed);
+    });
+    
+    // Support keyboard space/enter press
+    settingsHeader.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        settingsHeader.click();
+      }
+    });
+  }
  
   // Semester Selection Dropdown Change
   semesterSelect.addEventListener('change', () => {
@@ -807,6 +825,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderStudentList();
       updateProgressMetrics();
       loadStudentDetails(seat); // Reload status badges
+      
+      // Hide loader first so it is hidden in originalBtnHtml restore!
+      saveLoader.classList.add('hidden');
       
       // Button success state feedback
       const originalBtnHtml = saveCommentBtn.innerHTML;

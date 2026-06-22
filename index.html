@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="style.css?v=1.2.1">
+  <link rel="stylesheet" href="style.css?v=1.3.0">
 </head>
 <body>
   
@@ -44,26 +44,36 @@
     <!-- Sidebar: Student Roster and Semester -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <!-- Student Group (Sheet Tab) Selection -->
-        <div class="semester-section" style="margin-bottom: 12px;">
-          <label for="sheetSelect" class="section-label">選擇學生群 (分頁)</label>
-          <select id="sheetSelect" class="styled-select">
-            <option value="">載入分頁中...</option>
-          </select>
-        </div>
-        
-        <!-- Semester Selection and Setup -->
-        <div class="semester-section">
-          <div class="flex-row justify-between align-center">
-            <label for="semesterSelect" class="section-label">選擇學期</label>
-            <button class="text-link-btn" id="addSemesterBtn">+ 新增學期</button>
+        <!-- Collapsible Settings Panel -->
+        <div class="sidebar-settings-panel">
+          <div class="sidebar-settings-header" id="sidebarSettingsHeader" role="button" aria-expanded="true" aria-controls="sidebarSettingsContent" tabindex="0">
+            <span class="settings-title">⚙️ 班級與學期設定</span>
+            <span class="toggle-arrow" id="settingsToggleArrow">▼</span>
           </div>
-          <select id="semesterSelect" class="styled-select">
-            <option value="">載入學期中...</option>
-          </select>
-          <button class="btn btn-secondary btn-full btn-xs" id="completeSemesterBtn" type="button" style="margin-top: 6px; font-size: 11px; padding: 4px 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px;">
-            🏁 完成此學期 (切換至下一學期)
-          </button>
+          
+          <div class="sidebar-settings-content" id="sidebarSettingsContent">
+            <!-- Student Group (Sheet Tab) Selection -->
+            <div class="semester-section" style="margin-bottom: 12px;">
+              <label for="sheetSelect" class="section-label">選擇學生群 (分頁)</label>
+              <select id="sheetSelect" class="styled-select">
+                <option value="">載入分頁中...</option>
+              </select>
+            </div>
+            
+            <!-- Semester Selection and Setup -->
+            <div class="semester-section">
+              <div class="flex-row justify-between align-center">
+                <label for="semesterSelect" class="section-label">選擇學期</label>
+                <button class="text-link-btn" id="addSemesterBtn">+ 新增學期</button>
+              </div>
+              <select id="semesterSelect" class="styled-select">
+                <option value="">載入學期中...</option>
+              </select>
+              <button class="btn btn-secondary btn-full btn-xs" id="completeSemesterBtn" type="button" style="margin-top: 6px; font-size: 11px; padding: 4px 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                🏁 完成此學期 (切換至下一學期)
+              </button>
+            </div>
+          </div>
         </div>
         
         <!-- Search -->
@@ -367,6 +377,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.2.1"></script>
+  <script src="app.js?v=1.3.0"></script>
 </body>
 </html>

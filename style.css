@@ -1019,6 +1019,19 @@ textarea {
     overflow-y: auto;
     height: auto;
   }
+  .app-header {
+    padding: 0 10px;
+  }
+  .header-title {
+    font-size: 15px;
+  }
+  .sync-text {
+    display: none;
+  }
+  .sync-status {
+    padding: 6px;
+    border-radius: 50%;
+  }
   .main-container {
     flex-direction: column;
     height: auto;
@@ -1093,4 +1106,62 @@ textarea {
   .ai-outputs-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Collapsible Settings Panel */
+.sidebar-settings-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-secondary);
+  overflow: hidden;
+  transition: var(--transition);
+  margin-bottom: 12px;
+}
+
+.sidebar-settings-header {
+  padding: 10px 14px;
+  background: var(--surface-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: var(--transition);
+  outline: none;
+}
+
+.sidebar-settings-header:hover {
+  background: var(--border);
+}
+
+.sidebar-settings-header .toggle-arrow {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-settings-content {
+  padding: 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  max-height: 400px;
+  transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+/* Collapsed State */
+.sidebar-settings-panel.collapsed .sidebar-settings-content {
+  max-height: 0;
+  padding: 0 14px;
+  opacity: 0;
+  border-top-color: transparent;
+  pointer-events: none;
+}
+
+.sidebar-settings-panel.collapsed .toggle-arrow {
+  transform: rotate(-90deg);
 }
