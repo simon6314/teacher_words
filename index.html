@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="導師期末評語 AI 生成器 - 整合 GPT/Gemini API 與 Google 試算表，自動化輔助期末評語撰寫。">
+  <title>期末評語 AI 生成器</title>
+  
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css?v=1.0.0">
+</head>
+<body>
+  
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="header-icon">✍️</span>
+      <h1 class="header-title">導師期末評語 AI 生成器</h1>
+    </div>
+    
+    <div class="header-right">
+      <!-- Sync Status Indicator -->
+      <div class="sync-status" id="syncStatus">
+        <span class="sync-dot state-disconnected" id="syncDot"></span>
+        <span class="sync-text" id="syncText">未連線試算表</span>
+      </div>
+      
+      <!-- Settings Button -->
+      <button class="icon-btn" id="openSettingsBtn" aria-label="開啟設定" title="系統設定">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+    
+    <!-- Sidebar: Student Roster and Semester -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <!-- Semester Selection and Setup -->
+        <div class="semester-section">
+          <div class="flex-row justify-between align-center">
+            <label for="semesterSelect" class="section-label">選擇學期</label>
+            <button class="text-link-btn" id="addSemesterBtn">+ 新增學期</button>
+          </div>
+          <select id="semesterSelect" class="styled-select">
+            <option value="">載入學期中...</option>
+          </select>
+          <button class="btn btn-secondary btn-full btn-xs" id="completeSemesterBtn" type="button" style="margin-top: 6px; font-size: 11px; padding: 4px 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            🏁 完成此學期 (切換至下一學期)
+          </button>
+        </div>
+        
+        <!-- Search -->
+        <div class="search-section">
+          <input type="text" id="studentSearchInput" placeholder="搜尋座號或姓名..." autocomplete="off">
+          <button class="clear-btn" id="clearSearchBtn" style="display: none;">✕</button>
+        </div>
+        
+        <!-- Progress Summary -->
+        <div class="progress-section">
+          <div class="flex-row justify-between mb-xs">
+            <span class="progress-label">評語撰寫進度</span>
+            <span class="progress-ratio" id="progressText">0 / 0 人 (0%)</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <!-- Add Student Action -->
+        <button class="btn btn-secondary btn-full" id="addStudentBtn">
+          <span>➕ 新增學生資料</span>
+        </button>
+      </div>
+      
+      <!-- Student List -->
+      <div class="student-list-container">
+        <ul class="student-list" id="studentList">
+          <!-- Rendered dynamically -->
+          <li class="list-empty">正在連線至 Google 試算表...</li>
+        </ul>
+      </div>
+    </aside>
+    
+    <!-- Main Workspace for Selected Student -->
+    <section class="workspace" id="workspace">
+      
+      <!-- Welcome View (Default before student selected) -->
+      <div class="welcome-view" id="welcomeView">
+        <div class="welcome-card">
+          <div class="welcome-illustration">✍️</div>
+          <h2>開始撰寫期末評語</h2>
+          <p>請於左側名單中選擇一位學生，即可輸入關鍵詞並利用 AI 產生合適的期末評語。</p>
+          <div class="welcome-steps">
+            <div class="step-card">
+              <span class="step-num">1</span>
+              <h4>設定 API 金鑰</h4>
+              <p>點擊右上角 <svg viewBox="0 0 24 24" width="14" height="14" style="display:inline;vertical-align:middle;margin:0 2px;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/></svg> 設定 GAS API 網址與 AI 金鑰。</p>
+            </div>
+            <div class="step-card">
+              <span class="step-num">2</span>
+              <h4>輸入表現關鍵詞</h4>
+              <p>可自由輸入或利用我們提供的「快速表現標籤」一鍵添加。</p>
+            </div>
+            <div class="step-card">
+              <span class="step-num">3</span>
+              <h4>AI 一鍵生成</h4>
+              <p>選定評語風格與 AI 模型，一鍵產生評語並寫回試算表同步。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Student Edit Panel (Hidden initially) -->
+      <div class="editor-panel" id="editorPanel" style="display: none;">
+        
+        <!-- Student Identity Header Card -->
+        <div class="student-card">
+          <div class="student-meta-info">
+            <span class="student-seat-badge" id="activeSeatBadge">00</span>
+            <div>
+              <h2 class="student-name-display" id="activeNameDisplay">學生姓名</h2>
+              <p class="student-semester-display" id="activeSemesterDisplay">學期別</p>
+            </div>
+          </div>
+          <div class="student-status-badge-container">
+            <span class="status-badge badge-missing" id="activeStatusBadge">未撰寫</span>
+          </div>
+        </div>
+        
+        <!-- Input & Controls Area -->
+        <div class="editor-grid">
+          
+          <!-- Left Column: Input and Quick Tags -->
+          <div class="editor-left-col">
+            
+            <!-- Keywords Field -->
+            <div class="form-group">
+              <div class="flex-row justify-between align-center mb-xs">
+                <label for="keywordsInput" class="form-label">日常表現關鍵詞</label>
+                <button class="text-link-btn text-danger" id="clearKeywordsBtn">清空內容</button>
+              </div>
+              <textarea id="keywordsInput" placeholder="請輸入學生的日常表現，例如：熱心公務、數學優秀、上課容易分心但態度良好..." rows="4"></textarea>
+            </div>
+            
+            <!-- Quick Tags Accordion/Categorized Container -->
+            <div class="quick-tags-section">
+              <span class="form-label mb-sm block-element">常用表現標籤（點擊加入）</span>
+              
+              <div class="tags-tabs">
+                <button class="tags-tab-btn active" data-category="general">個性/特質</button>
+                <button class="tags-tab-btn" data-category="academic">學習/學業</button>
+                <button class="tags-tab-btn" data-category="conduct">品格/常規</button>
+                <button class="tags-tab-btn" data-category="social">同儕/人際</button>
+              </div>
+              
+              <div class="tags-container" id="tagsContainer">
+                <!-- Tags populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Column: AI Action and Output -->
+          <div class="editor-right-col">
+            
+            <!-- AI Generation Control Board -->
+            <div class="ai-controls-board">
+              <h3 class="panel-subtitle">✨ AI 生成評語設定</h3>
+              
+              <div class="flex-row gap-sm flex-wrap mt-sm mb-sm">
+                <!-- Gemini Model Selector -->
+                <div class="form-group flex-1" style="min-width: 140px;">
+                  <label for="geminiModelSelect" class="form-label-sm">🤖 Gemini 模型</label>
+                  <select id="geminiModelSelect" class="styled-select styled-select-sm">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (推薦)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </select>
+                </div>
+                
+
+                <!-- Style Selector -->
+                <div class="form-group flex-1" style="min-width: 140px;">
+                  <label for="promptStyleSelect" class="form-label-sm">評語口吻風格</label>
+                  <select id="promptStyleSelect" class="styled-select styled-select-sm">
+                    <option value="warm">溫暖鼓勵型 (正面、溫柔)</option>
+                    <option value="formal">客觀適中型 (客觀、嚴謹)</option>
+                    <option value="expectant">殷切期許型 (指點改進點)</option>
+                    <option value="concise">精簡扼要型 (字數較精簡)</option>
+                    <option value="custom">自訂 Prompt (於設定修改)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <button class="btn btn-primary btn-full btn-lg" id="generateCommentBtn">
+                <span class="btn-text">✨ AI 產生評語</span>
+                <span class="loader spinner-sm hidden" id="generateLoader"></span>
+              </button>
+              
+              <button class="btn btn-secondary btn-full mt-xs" id="copyPromptBtn" type="button" style="margin-top: 8px;">
+                <span>📋 複製 AI 提問詞 (可至 ChatGPT/Claude 免費網頁版貼上)</span>
+              </button>
+            </div>
+            
+            <!-- Gemini AI Output Column -->
+            <div class="ai-outputs-grid">
+              <!-- Gemini Result -->
+              <div class="ai-output-box-card">
+                <div class="flex-row justify-between align-center mb-xs">
+                  <span class="provider-label">🤖 Gemini 生成版本</span>
+                  <button class="btn btn-secondary btn-xs" id="copyGeminiBtn" type="button">📋 複製</button>
+                </div>
+                <textarea id="geminiOutput" placeholder="Gemini 評語會顯示在此..." rows="5" readonly></textarea>
+                <button class="btn btn-primary btn-sm btn-full mt-xs" id="adoptGeminiBtn" type="button">🎯 採用此版本</button>
+              </div>
+            </div>
+            
+            <!-- Output Comment Area -->
+            <div class="comment-output-section">
+              <div class="flex-row justify-between align-center mb-xs">
+                <label for="commentOutput" class="form-label">✍️ 最終調整評語（將寫入試算表）</label>
+                <div class="word-counter" id="wordCounter">0 字</div>
+              </div>
+              <textarea id="commentOutput" placeholder="請點選上方「採用此版本」或在此直接撰寫修改最終評語..." rows="5"></textarea>
+              
+              <div class="flex-row gap-sm mt-sm">
+                <!-- Copy Button -->
+                <button class="btn btn-secondary flex-1" id="copyCommentBtn">
+                  <span>📋 複製最終評語</span>
+                </button>
+                
+                <!-- Save Button -->
+                <button class="btn btn-success flex-2" id="saveCommentBtn">
+                  <span class="btn-text">💾 儲存並寫入試算表</span>
+                  <span class="loader spinner-sm hidden" id="saveLoader"></span>
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL DIALOGS                              -->
+  <!-- ========================================== -->
+
+  <!-- 1. Settings Modal -->
+  <div class="modal-overlay" id="settingsModal" aria-hidden="true">
+    <div class="modal-content modal-content-lg">
+      <div class="modal-header">
+        <div class="modal-title-wrapper">
+          <span class="modal-icon">⚙️</span>
+          <h4 class="modal-title">系統與 API 設定</h4>
+        </div>
+        <button class="close-btn" id="closeSettingsModalBtn" aria-label="關閉對話框">✕</button>
+      </div>
+      
+      <form id="settingsForm">
+        <div class="modal-body">
+          <p class="modal-subtitle-text">請設定 Google Apps Script Web App URL。金鑰已安全部署於試算表後端，此處無需填寫 API Key。</p>
+          
+          <!-- GAS Web App URL -->
+          <div class="form-group mb-md">
+            <label for="gasUrlInput" class="form-label font-semibold">Google Apps Script Web App URL</label>
+            <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" required autocomplete="off">
+            <span class="help-text">將 Google 試算表之 Apps Script 部署為網頁應用程式後取得的 URL。</span>
+          </div>
+          
+          <!-- Custom Prompt Template -->
+          <div class="form-group">
+            <label for="customPromptInput" class="form-label font-semibold">自訂 AI 生成 Prompt 指令</label>
+            <textarea id="customPromptInput" rows="4" placeholder="你是一位國小導師，請根據此學生的座號 {seat} 姓名 {name} 與日常表現關鍵詞：{keywords}，產生一段約 100-150 字的溫暖正面評語..."></textarea>
+            <span class="help-text">支援預設語法標籤：<code>{seat}</code> 代表座號、<code>{name}</code> 代表學生姓名、<code>{keywords}</code> 代表您輸入的日常關鍵詞。</span>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="testGASConnectionBtn">測試試算表連線</button>
+          <div class="flex-row gap-sm">
+            <button type="button" class="btn btn-secondary" id="cancelSettingsBtn">取消</button>
+            <button type="submit" class="btn btn-primary" id="saveSettingsBtn">儲存設定</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add Student Modal -->
+  <div class="modal-overlay" id="addStudentModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrapper">
+          <span class="modal-icon">👤</span>
+          <h4 class="modal-title">新增學生資料</h4>
+        </div>
+        <button class="close-btn" id="closeAddStudentModalBtn" aria-label="關閉對話框">✕</button>
+      </div>
+      
+      <form id="addStudentForm">
+        <div class="modal-body">
+          <div class="form-group mb-sm">
+            <label for="newStudentSeat" class="form-label">學生座號</label>
+            <input type="number" id="newStudentSeat" placeholder="例如：1" required min="1" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="newStudentName" class="form-label">學生姓名</label>
+            <input type="text" id="newStudentName" placeholder="例如：王小明" required autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-actions modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelAddStudentBtn">取消</button>
+          <button type="submit" class="btn btn-success" id="submitAddStudentBtn">
+            <span class="btn-text">確認新增</span>
+            <span class="loader spinner-sm hidden" id="addStudentLoader"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Add Semester Modal -->
+  <div class="modal-overlay" id="addSemesterModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrapper">
+          <span class="modal-icon">📅</span>
+          <h4 class="modal-title">新增學期欄位</h4>
+        </div>
+        <button class="close-btn" id="closeAddSemesterModalBtn" aria-label="關閉對話框">✕</button>
+      </div>
+      
+      <form id="addSemesterForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="newSemesterName" class="form-label">學期名稱</label>
+            <input type="text" id="newSemesterName" placeholder="例如：115上 或 115下" required autocomplete="off">
+            <span class="help-text">這將會在您的 Google 試算表最右方自動新增對應學期的「關鍵詞」與「AI生成描述」欄位。</span>
+          </div>
+        </div>
+        <div class="modal-actions modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelAddSemesterBtn">取消</button>
+          <button type="submit" class="btn btn-primary" id="submitAddSemesterBtn">
+            <span class="btn-text">確認新增</span>
+            <span class="loader spinner-sm hidden" id="addSemesterLoader"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.0.0"></script>
+</body>
+</html>
